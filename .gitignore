@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# env files: keep the example committable
+!.env.example
+
+# safety eval photos (stock/celebrity images are not ours to redistribute)
+/safety-eval/images/*
+!/safety-eval/images/README.md
+
+# local test photos
+/public/_test/

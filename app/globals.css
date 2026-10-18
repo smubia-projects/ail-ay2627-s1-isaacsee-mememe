@@ -1,26 +1,119 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --paper: #eef0ff;
+  --surface: #ffffff;
+  --ink: #1c1a3a;
+  --muted: #5f5c8a;
+  --pop: #ff4f9a;
+  --sun: #ffd23f;
+  --mint: #2ed3a1;
+  --mint-ink: #0b7a58;
+  --danger: #c2185b;
+  --line: rgba(28, 26, 58, 0.12);
+  --dot: rgba(28, 26, 58, 0.06);
+  --sticker-shadow: 0 8px 0 rgba(28, 26, 58, 0.12), 0 14px 30px rgba(28, 26, 58, 0.18);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --paper: #16142b;
+    --surface: #221f3d;
+    --ink: #f2f1ff;
+    --muted: #a7a4cc;
+    --pop: #ff6fae;
+    --sun: #ffd23f;
+    --mint: #3be3b0;
+    --mint-ink: #3be3b0;
+    --danger: #ff8fbf;
+    --line: rgba(242, 241, 255, 0.12);
+    --dot: rgba(242, 241, 255, 0.06);
+    --sticker-shadow: 0 8px 0 rgba(0, 0, 0, 0.25), 0 14px 30px rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-pop: var(--pop);
+  --color-sun: var(--sun);
+  --color-mint: var(--mint);
+  --color-line: var(--line);
+  --color-danger: var(--danger);
+  --color-mint-ink: var(--mint-ink);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), ui-sans-serif, system-ui, sans-serif;
+  --radius-chip: 999px;
+  --radius-card: 20px;
+  --radius-panel: 28px;
+  --shadow-sticker: var(--sticker-shadow);
+}
+
+html {
+  background: var(--paper);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--dot) 1.5px, transparent 1.6px);
+  background-size: 24px 24px;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.55;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.02em;
+  line-height: 1.05;
+}
+
+:focus-visible {
+  outline: 2px solid var(--pop);
+  outline-offset: 2px;
+}
+
+.prose-width {
+  max-width: 70ch;
+}
+
+/* A sticker: chunky white die-cut border that lifts off the paper. */
+.sticker {
+  background: #fff;
+  border-radius: 28px;
+  padding: 10px;
+  box-shadow: var(--sticker-shadow);
+}
+
+.dashed-cut {
+  border: 3px dashed var(--line);
+  border-radius: 40% 46% 42% 48% / 46% 40% 50% 42%;
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+.skeleton-sticker {
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-sticker {
+    animation: none;
+  }
 }

@@ -3,7 +3,7 @@
 Upload a photo of yourself, a friend (with consent), or your pet. Pick a vibe and a sticker style. MemeMe turns the subject into a die-cut sticker, matches it to a meme format from a curated dataset, writes the caption, and exports a 512×512 transparent PNG ready for Telegram or WhatsApp.
 
 **Track:** Projects for Daily Life · SMU BIA AI Lodge Hackathon 2026
-**Live:** _add Vercel URL_ · **Demo video:** _add link_
+**Live:** https://mememe-six.vercel.app · **Demo video:** _add link_
 
 ---
 

@@ -3,7 +3,7 @@
 Upload a photo of yourself, a friend (with consent), or your pet. Pick a vibe and a sticker style. MemeMe turns the subject into a die-cut sticker, matches it to a meme format from a curated dataset, writes the caption, and exports a 512×512 transparent PNG ready for Telegram or WhatsApp.
 
 **Track:** Projects for Daily Life · SMU BIA AI Lodge Hackathon 2026
-**Live:** https://mememe-six.vercel.app · **Demo video:** _add link_
+**Live:** https://mememe-six.vercel.app · **Demo video:** https://youtu.be/FYT-2DB_S6Y
 
 ---
 
@@ -18,6 +18,8 @@ Upload a photo of yourself, a friend (with consent), or your pet. Pick a vibe an
 MemeMe is a Next.js web app that chains a vision model, a curated meme-format dataset, an image model and two layers of moderation into one 20-second flow. The photo is checked for safety first (no kids, no celebrities, nothing explicit), then analysed for expression, pose and energy. That analysis picks three meme formats from our own dataset, Gemini writes captions for them, and an independent moderator checks every caption. In parallel, an OpenRouter image model redraws the subject as a Cartoon, Chibi or Pixel Art sticker, which the browser cuts out with a chunky white die-cut border. All text is drawn in code on a canvas, so captions are always crisp and always editable.
 
 ![MemeMe result screen: a chibi golden retriever sticker captioned "Me after surviving the 8am tutorial", with three caption options, an inline editor and download/share actions](docs/hero.png)
+
+[![Watch the MemeMe demo video](https://img.youtube.com/vi/FYT-2DB_S6Y/hqdefault.jpg)](https://youtu.be/FYT-2DB_S6Y)
 
 <p align="center"><img src="docs/reveal.gif" width="420" alt="Sticker reveal: the uploaded photo, real-time progress ticks, then the die-cut sticker slaps onto the stage with a shine sweep"></p>
 

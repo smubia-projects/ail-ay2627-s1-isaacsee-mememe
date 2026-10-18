@@ -17,9 +17,11 @@ Upload a photo of yourself, a friend (with consent), or your pet. Pick a vibe an
 
 MemeMe is a Next.js web app that chains a vision model, a curated meme-format dataset, an image model and two layers of moderation into one 20-second flow. The photo is checked for safety first (no kids, no celebrities, nothing explicit), then analysed for expression, pose and energy. That analysis picks three meme formats from our own dataset, Gemini writes captions for them, and an independent moderator checks every caption. In parallel, an OpenRouter image model redraws the subject as a Cartoon, Chibi or Pixel Art sticker, which the browser cuts out with a chunky white die-cut border. All text is drawn in code on a canvas, so captions are always crisp and always editable.
 
-![MemeMe create page](docs/hero.png)
+![MemeMe result screen: a chibi golden retriever sticker captioned "Me after surviving the 8am tutorial", with three caption options, an inline editor and download/share actions](docs/hero.png)
 
-![Sticker reveal](docs/reveal.gif)
+<p align="center"><img src="docs/reveal.gif" width="420" alt="Sticker reveal: the uploaded photo, real-time progress ticks, then the die-cut sticker slaps onto the stage with a shine sweep"></p>
+
+![MemeMe landing page](docs/landing.png)
 
 ## 3. Key Features
 

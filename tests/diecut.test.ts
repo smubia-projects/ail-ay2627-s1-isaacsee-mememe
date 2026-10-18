@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { boundingBox, buildBackgroundMask, cutLooksValid, dilateAlpha } from "@/lib/canvas/diecut";
+import { boundingBox, buildBackgroundMask, cutLooksValid, dilateAlpha, removeSpecks } from "@/lib/canvas/diecut";
 
 function image(w: number, h: number, paint: (x: number, y: number) => [number, number, number]) {
   const d = new Uint8ClampedArray(w * h * 4);
@@ -46,5 +46,22 @@ describe("die-cut mask", () => {
     const bb = boundingBox(subject, W, W)!;
     expect(bb.w).toBeGreaterThanOrEqual(17);
     expect(bb.w).toBeLessThanOrEqual(20);
+  });
+
+  it("drops background specks but keeps a second real subject", () => {
+    const w = 60;
+    const m = new Uint8Array(w * w);
+    const blob = (cx: number, cy: number, r: number) => {
+      for (let y = 0; y < w; y++) for (let x = 0; x < w; x++) if (Math.hypot(x - cx, y - cy) < r) m[y * w + x] = 1;
+    };
+    blob(20, 30, 12); // main pet
+    blob(46, 30, 7); // second pet
+    m[2 * w + 2] = 1; // noise speck
+    m[57 * w + 55] = 1;
+    removeSpecks(m, w, w);
+    expect(m[2 * w + 2]).toBe(0);
+    expect(m[57 * w + 55]).toBe(0);
+    expect(m[30 * w + 20]).toBe(1);
+    expect(m[30 * w + 46]).toBe(1);
   });
 });

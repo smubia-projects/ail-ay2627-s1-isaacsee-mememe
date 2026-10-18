@@ -100,7 +100,7 @@ function drawAiLabel(ctx: CanvasRenderingContext2D) {
 
 const boundsCache = new WeakMap<HTMLCanvasElement, { x: number; y: number; w: number; h: number }>();
 
-/** Bounding box of non-transparent pixels (includes the die-cut outline and most of the shadow). */
+/** Bounding box of every non-transparent pixel, including the full soft shadow (cropping it leaves hard edges). */
 function opaqueBounds(c: HTMLCanvasElement) {
   const cached = boundsCache.get(c);
   if (cached) return cached;
@@ -112,7 +112,7 @@ function opaqueBounds(c: HTMLCanvasElement) {
     maxY = -1;
   for (let y = 0; y < h; y++)
     for (let x = 0; x < w; x++)
-      if (data[(y * w + x) * 4 + 3] > 24) {
+      if (data[(y * w + x) * 4 + 3] > 1) {
         if (x < minX) minX = x;
         if (x > maxX) maxX = x;
         if (y < minY) minY = y;

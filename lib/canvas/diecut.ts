@@ -51,6 +51,46 @@ export function buildBackgroundMask(data: Uint8ClampedArray, w: number, h: numbe
   return { bg, removedRatio: removed / n };
 }
 
+/**
+ * Drop small islands of "subject" (background noise, paper texture, stray dots) so they don't get
+ * dilated into white blobs. Keeps every component at least 4% the size of the largest one,
+ * so a second pet or person survives. Mutates and returns `subject`.
+ */
+export function removeSpecks(subject: Uint8Array, w: number, h: number, minShareOfLargest = 0.04): Uint8Array {
+  const n = w * h;
+  const label = new Int32Array(n);
+  const sizes: number[] = [0];
+  const stack = new Int32Array(n);
+  for (let start = 0; start < n; start++) {
+    if (!subject[start] || label[start]) continue;
+    const id = sizes.length;
+    let sp = 0;
+    let size = 0;
+    label[start] = id;
+    stack[sp++] = start;
+    while (sp > 0) {
+      const i = stack[--sp];
+      size++;
+      const x = i % w;
+      const visit = (j: number) => {
+        if (subject[j] && !label[j]) {
+          label[j] = id;
+          stack[sp++] = j;
+        }
+      };
+      if (x > 0) visit(i - 1);
+      if (x < w - 1) visit(i + 1);
+      if (i >= w) visit(i - w);
+      if (i < n - w) visit(i + w);
+    }
+    sizes.push(size);
+  }
+  const largest = Math.max(0, ...sizes);
+  const keep = sizes.map((sz) => sz >= largest * minShareOfLargest);
+  for (let i = 0; i < n; i++) if (subject[i] && !keep[label[i]]) subject[i] = 0;
+  return subject;
+}
+
 /** The cut-out is only trustworthy if a sensible share of the image was removed. */
 export function cutLooksValid(removedRatio: number) {
   return removedRatio >= DIECUT.minRemoved && removedRatio <= DIECUT.maxRemoved;
@@ -188,11 +228,12 @@ export function dieCutSticker(src: Src): { canvas: HTMLCanvasElement; cut: boole
 
   const subjectMask = new Uint8Array(w * h);
   for (let i = 0; i < bg.length; i++) subjectMask[i] = bg[i] ? 0 : 1;
+  removeSpecks(subjectMask, w, h);
   const bb = boundingBox(subjectMask, w, h);
   if (!bb) return { canvas: roundedPhotoSticker(src), cut: false };
 
   // Punch out the background.
-  for (let i = 0; i < bg.length; i++) if (bg[i]) img.data[i * 4 + 3] = 0;
+  for (let i = 0; i < subjectMask.length; i++) if (!subjectMask[i]) img.data[i * 4 + 3] = 0;
   wctx.putImageData(img, 0, 0);
 
   // Place the subject's bounding box centred in the output square.

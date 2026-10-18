@@ -5,6 +5,14 @@ import { ApiError, postJson } from "@/lib/api";
 import { renderLines } from "@/lib/render";
 import type { CaptionOption, SlotName, Slots } from "@/lib/schemas";
 
+/** "Top line" / "Bottom line" for two-slot formats, else the pattern around the slot ("Me after …"). */
+function slotLabel(o: CaptionOption, s: SlotName, count: number) {
+  const where = s === "top" ? "Top line" : "Bottom line";
+  if (count > 1) return where;
+  const hint = o.template.pattern[s]?.replace(`{${s}}`, "…").trim();
+  return hint && hint !== "…" ? hint : where;
+}
+
 const REJECT_MSG = "That caption could hurt someone, so we can't use it. Try a joke about the situation instead.";
 
 export function CaptionOptions({
@@ -100,7 +108,7 @@ function CaptionEditor({ option: current, onCommit }: { option: CaptionOption; o
         <div className="mt-2 space-y-2">
           {slotNames.map((s) => (
             <label key={s} className="block">
-              <span className="text-[13px] text-muted">{slotNames.length > 1 ? (s === "top" ? "Top line" : "Bottom line") : current.template.pattern[s]?.replace(`{${s}}`, "…")}</span>
+              <span className="text-[13px] text-muted">{slotLabel(current, s, slotNames.length)}</span>
               <input
                 value={draft[s] ?? ""}
                 maxLength={60}

@@ -40,7 +40,18 @@ function loadImage(name: string): string | null {
   return `data:${mime};base64,${readFileSync(p).toString("base64")}`;
 }
 
+// Gemini's free tier allows 15 requests/minute. When the API reports it's busy, wait for the
+// quota window and retry, so the eval measures safety behaviour rather than quota.
 async function post(path: string, body: unknown, headers: Record<string, string> = {}) {
+  for (let attempt = 0; ; attempt++) {
+    const r = await postOnce(path, body, headers);
+    if (r.json?.error?.code !== "ai_upstream" || attempt >= 3) return r;
+    console.log(`     (AI busy on ${path}, waiting 45s for the rate-limit window…)`);
+    await new Promise((res) => setTimeout(res, 45_000));
+  }
+}
+
+async function postOnce(path: string, body: unknown, headers: Record<string, string> = {}) {
   const res = await fetch(BASE + path, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-forwarded-for": RUN_IP, ...headers },

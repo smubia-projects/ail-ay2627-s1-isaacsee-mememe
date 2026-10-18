@@ -9,10 +9,10 @@ const HOW = [
 ];
 
 const HERO = [
-  { ex: EXAMPLES[0], cls: "left-[2%] top-[4%] w-[52%]", rot: -6 },
-  { ex: EXAMPLES[1], cls: "right-[0%] top-[0%] w-[46%]", rot: 8 },
-  { ex: EXAMPLES[3], cls: "left-[10%] bottom-[0%] w-[44%]", rot: 4 },
-  { ex: EXAMPLES[4], cls: "right-[4%] bottom-[6%] w-[48%]", rot: -4 },
+  { ex: EXAMPLES[0], cls: "left-[0%] top-[3%] w-[48%]", rot: -6 },
+  { ex: EXAMPLES[1], cls: "right-[0%] top-[0%] w-[47%]", rot: 7 },
+  { ex: EXAMPLES[2], cls: "left-[5%] bottom-[0%] w-[46%]", rot: 4 },
+  { ex: EXAMPLES[3], cls: "right-[1%] bottom-[1%] w-[47%]", rot: -4 },
 ];
 
 export default function Home() {
@@ -34,7 +34,7 @@ export default function Home() {
               <span className="text-sm text-muted">Free · no sign-up · nothing stored</span>
             </div>
           </div>
-          <div className="relative mx-auto w-full max-w-[520px] aspect-square text-[15px] sm:text-[19px]">
+          <div className="relative mx-auto w-full max-w-[520px] aspect-[1/1.08] text-[15px] sm:text-[19px]">
             {HERO.map(({ ex, cls, rot }) => (
               <ExampleSticker key={ex.alt} ex={ex} rotate={rot} className={`absolute ${cls}`} />
             ))}

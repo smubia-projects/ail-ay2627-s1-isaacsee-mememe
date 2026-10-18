@@ -75,7 +75,9 @@ export function handler(route: string, fn: (req: Request) => Promise<Response>) 
             ? "The AI took too long to answer. Try again."
             : e.kind === "config"
               ? "The AI isn't set up on this server yet."
-              : "The AI gave us a garbled answer. Try again.";
+              : e.kind === "upstream"
+                ? "The AI service is busy right now. Try again in a moment."
+                : "The AI gave us a garbled answer. Try again.";
       }
       logEvent(route, { status, code, ms: Date.now() - t0, err: e instanceof Error ? e.message.slice(0, 160) : "unknown" });
       return Response.json({ error: { code, message } }, { status });

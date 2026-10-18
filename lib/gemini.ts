@@ -2,7 +2,7 @@ import "server-only";
 import { GoogleGenAI, type Part } from "@google/genai";
 import type { z } from "zod";
 
-export const GEMINI_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.5-flash";
+export const GEMINI_MODEL = process.env.GEMINI_TEXT_MODEL || "gemini-3.5-flash-lite";
 
 let client: GoogleGenAI | null = null;
 function getClient() {
@@ -42,7 +42,15 @@ function extractJson(text: string): unknown {
  */
 export async function generateJson<T extends z.ZodType>(
   schema: T,
-  opts: { system: string; parts: Part[]; temperature?: number; timeoutMs?: number; fakeResponses?: string[] },
+  opts: {
+    system: string;
+    parts: Part[];
+    /** JSON Schema for constrained decoding (see lib/jsonSchemas.ts). */
+    jsonSchema?: unknown;
+    temperature?: number;
+    timeoutMs?: number;
+    fakeResponses?: string[];
+  },
 ): Promise<z.infer<T>> {
   let lastErr: unknown;
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -59,6 +67,7 @@ export async function generateJson<T extends z.ZodType>(
           config: {
             systemInstruction: opts.system,
             responseMimeType: "application/json",
+            responseJsonSchema: opts.jsonSchema,
             temperature: opts.temperature ?? 0.4,
             abortSignal: ac.signal,
           },
@@ -68,9 +77,13 @@ export async function generateJson<T extends z.ZodType>(
         if (ac.signal.aborted) throw new AiError("timeout", "Gemini timed out");
         if (e instanceof AiError) throw e;
         lastErr = e;
-        // Network/5xx: worth exactly one retry too.
-        if (attempt === 0) continue;
-        throw new AiError("upstream", "Gemini request failed");
+        const status = (e as { status?: number }).status;
+        // Network/429/5xx: worth exactly one retry, after a short pause for rate limits.
+        if (attempt === 0) {
+          if (status === 429 || status === 503) await new Promise((r) => setTimeout(r, 2500));
+          continue;
+        }
+        throw new AiError("upstream", `Gemini request failed (${status ?? "network"}): ${String((e as Error)?.message ?? e).slice(0, 160)}`);
       } finally {
         clearTimeout(timer);
       }

@@ -1,6 +1,7 @@
 import "server-only";
 import { checkBlocklist } from "./blocklist";
 import { generateJson, imagePart } from "./gemini";
+import { ANALYZE_JSON, CAPTION_JSON, MODERATE_JSON, RANK_JSON } from "./jsonSchemas";
 import type { Theme } from "./options";
 import {
   ANALYZE_SYSTEM,
@@ -50,14 +51,16 @@ export function decide(g: SafetyGate): { allowed: true } | { allowed: false; cod
   if (g.subject_type === "none" || g.subject_count < 1) return { allowed: false, code: "no_subject" };
   if (g.nsfw_or_suggestive) return { allowed: false, code: "nsfw" };
   if (g.violence_or_gore) return { allowed: false, code: "violence" };
+  // Crowds first: "try fewer people" is the actionable message, and the photo is blocked either way.
+  if (g.subject_count > 3) return { allowed: false, code: "too_many" };
   if (g.likely_minor) return { allowed: false, code: "minor" };
   if (g.public_figure_likely) return { allowed: false, code: "public_figure" };
-  if (g.subject_count > 3) return { allowed: false, code: "too_many" };
   return { allowed: true };
 }
 
 export async function analyzePhoto(image: string, fault: string | null) {
   const out = await generateJson(AnalyzeOutputSchema, {
+    jsonSchema: ANALYZE_JSON,
     system: ANALYZE_SYSTEM,
     parts: [{ text: "Analyze this photo." }, imagePart(image)],
     temperature: 0.1,
@@ -73,6 +76,7 @@ export async function matchTemplates(analysis: Analysis, theme: Theme): Promise<
   const byOverlap = tagOverlapRank(candidates, analysis);
   try {
     const ranked = await generateJson(RankOutputSchema, {
+      jsonSchema: RANK_JSON,
       system: RANK_SYSTEM,
       parts: [{ text: rankPrompt(analysis, theme, candidates) }],
       temperature: 0.5,
@@ -107,6 +111,7 @@ export async function moderateTexts(texts: string[]): Promise<Verdict[]> {
   const pending = texts.map((t, i) => ({ t, i })).filter(({ i }) => verdicts[i] === null);
   if (pending.length) {
     const out = await generateJson(ModerationBatchSchema, {
+      jsonSchema: MODERATE_JSON,
       system: MODERATE_SYSTEM,
       parts: [{ text: moderatePrompt(pending.map((p) => p.t)) }],
       temperature: 0,
@@ -155,6 +160,7 @@ function fullText(t: MemeTemplate, slots: Slots) {
 
 async function writeFor(analysis: Analysis, theme: Theme, templates: MemeTemplate[], avoid?: string) {
   const out = await generateJson(CaptionOutputSchema, {
+    jsonSchema: CAPTION_JSON,
     system: CAPTION_SYSTEM,
     parts: [{ text: captionPrompt(analysis, theme, templates, avoid) }],
     temperature: 0.9,

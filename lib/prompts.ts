@@ -75,7 +75,7 @@ Rules (all mandatory):
 - Singapore / student flavour is welcome where it fits naturally (exams, MRT, kopi, hawker, CCA, lah) but don't force it.
 - Each caption should feel different from the others.
 
-Return ONLY JSON: {"captions":[{"template_id":"<id>","slots":{"top":"...","bottom":"..."}}, ...]} with one entry per template, only including that template's slots.`;
+Return ONLY JSON: {"captions":[{"template_id":"<id>","top":"...","bottom":"..."}, ...]} with one entry per template. Fill only that template's slots; leave other fields out or empty.`;
 
 export function captionPrompt(analysis: Analysis, theme: Theme, templates: MemeTemplate[], avoid?: string) {
   return `Vibe: ${THEME_INFO[theme].label}. Tone: ${THEME_TONE[theme]}

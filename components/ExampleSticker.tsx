@@ -10,13 +10,14 @@ export type Example = {
   alt: string;
 };
 
+// Made with the app itself from stock pet photos (credits in README → External Tools & Datasets).
 export const EXAMPLES: Example[] = [
-  { emoji: "🐶", top: "Hooman,", bottom: "the bowl is only 80% full", font: "baloo", alt: "Dog sticker captioned: Hooman, the bowl is only 80% full" },
-  { emoji: "🐱", top: "Monday mood:", bottom: "not today", font: "anton", alt: "Cat sticker captioned: Monday mood: not today" },
-  { emoji: "🐹", top: "Exam season me:", bottom: "surviving on kopi", font: "bricolage", alt: "Hamster sticker captioned: Exam season me, surviving on kopi" },
-  { emoji: "🐰", bottom: "Sending you a big hug", font: "baloo", alt: "Bunny sticker captioned: Sending you a big hug" },
-  { emoji: "🦜", top: "Betrayal.", bottom: "You ate my last fishball.", font: "anton", alt: "Parrot sticker captioned: Betrayal. You ate my last fishball." },
-  { emoji: "🐼", top: "Me during the 8am lecture", bottom: "No thoughts, head empty", font: "bricolage", alt: "Panda sticker captioned: Me during the 8am lecture. No thoughts, head empty" },
+  { src: "/examples/corgi.png", emoji: "🐶", font: "bricolage", alt: "Cartoon corgi standing on its back legs, captioned: Nobody: Me: waiting for the lift like this" },
+  { src: "/examples/cat.png", emoji: "🐱", font: "anton", alt: "Chibi orange tabby cat, captioned: *gasp* the wifi just dropped for three seconds??" },
+  { src: "/examples/golden.png", emoji: "🐶", font: "baloo", alt: "Cartoon golden retriever looking up, captioned: Sending you a warm sunshine hug" },
+  { src: "/examples/pug.png", emoji: "🐶", font: "anton", alt: "Cartoon pug, captioned: When the prof says attendance is optional and you instantly regret trusting them" },
+  { src: "/examples/hamster.png", emoji: "🐹", font: "baloo", alt: "Pixel-art hamster, captioned: That tiny nose living rent free in my head" },
+  { src: "/examples/rabbit.png", emoji: "🐰", font: "baloo", alt: "Chibi spotted rabbit, captioned: This sweet little nose living rent free in my head" },
 ];
 
 const FONT_VAR = { anton: "var(--font-anton)", baloo: "var(--font-baloo)", bricolage: "var(--font-bricolage)" };
@@ -42,7 +43,7 @@ function Caption({ text, font }: { text: string; font: Example["font"] }) {
 /** A sticker with a die-cut white outline (stacked drop-shadows) and a caption, like the app's output. */
 export function ExampleSticker({ ex, className = "", rotate = 0 }: { ex: Example; className?: string; rotate?: number }) {
   if (ex.src) {
-    return <Image src={ex.src} alt={ex.alt} width={512} height={512} className={className} style={{ rotate: `${rotate}deg` }} />;
+    return <Image src={ex.src} alt={ex.alt} width={512} height={512} sizes="(max-width: 640px) 50vw, 280px" className={`h-auto ${className}`} style={{ rotate: `${rotate}deg` }} />;
   }
   return (
     <figure role="img" aria-label={ex.alt} className={`aspect-square flex flex-col items-center justify-center ${className}`} style={{ rotate: `${rotate}deg`, containerType: "inline-size" }}>

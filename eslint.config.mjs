@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Bundled API output (npm run build:server).
+    "server/dist/**",
   ]),
 ]);
 

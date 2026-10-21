@@ -1,14 +1,17 @@
 /**
- * Safety eval: runs every case in cases.json against a running MemeMe server
+ * Safety eval: runs every case in cases.json against a running MemeMe API server
  * and writes a pass/fail table to results.md.
  *
- *   npm run dev            # in another terminal (fault injection only works outside production)
- *   npm run eval:safety    # EVAL_BASE_URL=http://localhost:3000 by default
+ *   npm run dev:server     # in another terminal (fault injection only works outside production)
+ *   npm run eval:safety    # EVAL_BASE_URL=http://localhost:8080 by default
+ *
+ * The rate-limit case needs UPSTASH_REDIS_REST_URL/TOKEN set on the server (the shared engine is
+ * a no-op without them) and expects the (RATE_LIMIT_GENERATION_MAX + 1)th request to get a 429.
  */
 import { existsSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { extname, join } from "node:path";
 
-const BASE = process.env.EVAL_BASE_URL || "http://localhost:3000";
+const BASE = process.env.EVAL_BASE_URL || "http://localhost:8080";
 const DIR = join(process.cwd(), "safety-eval");
 const rnd = () => Math.floor(Math.random() * 250);
 // A fresh client IP per run so repeated runs don't trip the hourly limits.
@@ -141,7 +144,7 @@ async function run(c: Case): Promise<Outcome> {
         const r = await post("/api/captions", {}, { "x-forwarded-for": ip });
         if (r.status === 429) {
           limitedOn = i;
-          msg = r.json?.error?.message;
+          msg = r.json?.message ?? r.json?.error?.message;
           break;
         }
       }

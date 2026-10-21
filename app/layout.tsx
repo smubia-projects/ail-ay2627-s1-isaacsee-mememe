@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Anton, Baloo_2, Bricolage_Grotesque, Inter } from "next/font/google";
+import { ApiNotices } from "@/components/ApiNotices";
 import "./globals.css";
 
 const bricolage = Bricolage_Grotesque({
@@ -61,7 +62,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${bricolage.variable} ${inter.variable} ${anton.variable} ${baloo.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <ApiNotices />
+      </body>
     </html>
   );
 }

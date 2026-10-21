@@ -1,7 +1,20 @@
 import "server-only";
 import { z } from "zod";
 
+/** Image-output model for the sticker stylizer (must also accept image input). */
 export const OPENROUTER_MODEL = process.env.OPENROUTER_IMAGE_MODEL || "google/gemini-3.1-flash-image";
+
+export const OPENROUTER_CHAT_URL = "https://openrouter.ai/api/v1/chat/completions";
+
+/** Shared headers for every OpenRouter call (text/vision JSON in lib/llm.ts and images here). */
+export function openRouterHeaders() {
+  return {
+    Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+    "Content-Type": "application/json",
+    "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
+    "X-Title": "MemeMe",
+  };
+}
 
 const DataUrl = z.string().regex(/^data:image\/(png|jpeg|jpg|webp);base64,/);
 const ImageEntry = z.object({ image_url: z.object({ url: z.string() }) });
@@ -45,15 +58,10 @@ export async function stylizeImage(prompt: string, imageDataUrl: string, timeout
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
   try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch(OPENROUTER_CHAT_URL, {
       method: "POST",
       signal: ac.signal,
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-        "X-Title": "MemeMe",
-      },
+      headers: openRouterHeaders(),
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
         modalities: ["image", "text"],

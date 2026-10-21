@@ -1,6 +1,6 @@
 import "server-only";
 import type { z } from "zod";
-import { AiError } from "./gemini";
+import { AiError } from "./llm";
 import { rateLimit, type Bucket } from "./rateLimit";
 
 const MAX_BODY_BYTES = 4 * 1024 * 1024;

@@ -1,6 +1,6 @@
 import "server-only";
 import { checkBlocklist } from "./blocklist";
-import { generateJson, imagePart } from "./gemini";
+import { generateJson, imagePart } from "./llm";
 import { ANALYZE_JSON, CAPTION_JSON, MODERATE_JSON, RANK_JSON } from "./jsonSchemas";
 import type { Theme } from "./options";
 import {
@@ -26,10 +26,10 @@ import {
 } from "./schemas";
 import { filterTemplates, getTemplate, publicTemplate, renderLines, tagOverlapRank, type MemeTemplate } from "./templates";
 
-/** Dev-only fault injection for the safety eval (cases 9 + 10). Ignored in production. */
-export function evalFault(req: Request): string | null {
+/** Dev-only fault injection for the safety eval (cases 9 + 10), from the `x-mememe-eval` header. Ignored in production. */
+export function evalFault(header: string | null | undefined): string | null {
   if (process.env.NODE_ENV === "production") return null;
-  return req.headers.get("x-mememe-eval");
+  return header || null;
 }
 
 // ---------- [1] + [2] ----------
@@ -105,7 +105,7 @@ export async function matchTemplates(analysis: Analysis, theme: Theme): Promise<
 
 export type Verdict = { safe: boolean; category: ModCategory; layer: "blocklist" | "model" | "length" };
 
-/** Two independent layers: local blocklist first, then a Gemini classifier (batched). */
+/** Two independent layers: local blocklist first, then a model classifier (batched). */
 export async function moderateTexts(texts: string[]): Promise<Verdict[]> {
   const verdicts: (Verdict | null)[] = texts.map((t) => {
     const hit = checkBlocklist(t);

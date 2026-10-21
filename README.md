@@ -15,7 +15,7 @@ Upload a photo of yourself, a friend (with consent), or your pet. Pick a vibe an
 
 ## 2. Solution Overview
 
-MemeMe is a Next.js web app that chains a vision model, a curated meme-format dataset, an image model and two layers of moderation into one 20-second flow. The photo is checked for safety first (no kids, no celebrities, nothing explicit), then analysed for expression, pose and energy. That analysis picks three meme formats from our own dataset, Gemini writes captions for them, and an independent moderator checks every caption. In parallel, an OpenRouter image model redraws the subject as a Cartoon, Chibi or Pixel Art sticker, which the browser cuts out with a chunky white die-cut border. All text is drawn in code on a canvas, so captions are always crisp and always editable.
+MemeMe is a Next.js web app (frontend on Vercel) backed by a small Express API on Google Cloud Run that chains a vision model, a curated meme-format dataset, an image model and two layers of moderation into one 20-second flow. The photo is checked for safety first (no kids, no celebrities, nothing explicit), then analysed for expression, pose and energy. That analysis picks three meme formats from our own dataset, Gemini writes captions for them, and an independent moderator checks every caption. In parallel, an OpenRouter image model redraws the subject as a Cartoon, Chibi or Pixel Art sticker, which the browser cuts out with a chunky white die-cut border. All text is drawn in code on a canvas, so captions are always crisp and always editable.
 
 ![MemeMe result screen: a chibi golden retriever sticker captioned "Me after surviving the 8am tutorial", with three caption options, an inline editor and download/share actions](docs/hero.png)
 
@@ -60,15 +60,17 @@ photo ──► [1] Safety Gate ──► [2] Subject Analyzer ──► [3] Tem
 | 6 Sticker stylizer | `POST /api/stylize` | OpenRouter image model (`google/gemini-3.1-flash-image` by default) | Needs image **input** to keep the subject's likeness. 40s timeout; any error, refusal or missing image falls back to the photo. |
 | 7–8 Die-cut + compositor | Browser (`lib/canvas/*`) | Flood-fill mask, chamfer distance-transform outline, Canvas text | Image models render text badly, so all text is drawn in code with real fonts. |
 
-Every Gemini call uses constrained JSON decoding (`responseJsonSchema`) and every response is still validated with **zod**; a parse failure retries once, then returns a clear error. Rate-limit (429) responses get one short back-off retry. The image model runs in parallel with steps 3–5 to keep the happy path under 30 seconds. The progress list on screen ticks when each real API call resolves; there are no fake timers.
+All model calls go through **OpenRouter** (`server/` on Cloud Run; the `/api/*` routes above). Every JSON call (Gemini via OpenRouter, `lib/llm.ts`) uses constrained decoding (`response_format: json_schema` from `lib/jsonSchemas.ts`) and every response is still validated with **zod**; a parse failure retries once, then returns a clear error. Rate-limit (429) responses get one short back-off retry. The image model runs in parallel with steps 3–5 to keep the happy path under 30 seconds. The progress list on screen ticks when each real API call resolves; there are no fake timers.
 
 ## 5. External Tools & Datasets
 
 | Tool | Use | Licence / terms |
 |---|---|---|
-| Google Gemini API, `gemini-3.5-flash-lite` (set via `GEMINI_TEXT_MODEL`) | Vision safety gate, analysis, ranking, captions, moderation | Google AI terms |
+| OpenRouter, `google/gemini-3.5-flash-lite` (set via `OPENROUTER_TEXT_MODEL`) | Vision safety gate, analysis, ranking, captions, moderation | OpenRouter / Google terms |
 | OpenRouter, `google/gemini-3.1-flash-image` (set via `OPENROUTER_IMAGE_MODEL`) | Sticker stylisation | OpenRouter terms |
-| Next.js 16 (App Router), React 19, TypeScript | App + API routes | MIT |
+| Next.js 16 (App Router), React 19, TypeScript | Frontend | MIT |
+| Express 5, esbuild | API server (Cloud Run), bundled into one file | MIT |
+| Upstash Redis (shared AI Lodge rate-limit engine) | Per-IP limits on every AI route | Upstash terms |
 | Tailwind CSS 4 | Styling with CSS-variable design tokens | MIT |
 | Framer Motion | Sticker reveal, ticks, crossfades | MIT |
 | zod | Validation of every LLM response, request and the dataset | MIT |
@@ -76,26 +78,44 @@ Every Gemini call uses constrained JSON decoding (`responseJsonSchema`) and ever
 | Vitest, tsx | Tests and the safety eval runner | MIT |
 | Playwright (dev only) | Capturing README screenshots and generating the example stickers | Apache 2.0 |
 | Google Fonts: Bricolage Grotesque, Inter, Anton, Baloo 2 | UI and caption fonts | SIL Open Font License 1.1 |
-| Vercel | Hosting | — |
+| Vercel, Google Cloud Run | Frontend hosting, API hosting | — |
 | Example sticker photos (landing page), via Wikimedia Commons | Source photos turned into the six example stickers with MemeMe itself. Stickers are adaptations and shared under the same licence as their source. | Corgi puppy: Huoadg5888, CC0 · Orange tabby on a couch: LauraDelga, CC BY 4.0 · Golden retriever: Dietmar Rabich, CC BY-SA 4.0 · Fawn pug: Canarian, CC BY-SA 4.0 · Hamster (*Mesocricetus auratus*): Asia The Platypus, public domain · "Peaches the rabbit": KittensMittens2, CC BY-SA 4.0 |
 | **`data/meme_templates.json`** (self-authored) | 28 meme **formats** (text structures and layouts, not copyrighted images), each with themes, subject types, tags, an example and a safe fallback | Ours |
 
 ## 6. Installation & Setup
 
+The repo holds two deployables: the **Next.js frontend** (`app/`, `components/`, deployed on Vercel) and the
+**API** (`server/`, an Express service on Cloud Run that imports the pipeline from `lib/`).
+
 ```bash
 git clone <this repo>
 cd mememe
-npm i
-cp .env.example .env.local   # then add GEMINI_API_KEY and OPENROUTER_API_KEY
-npm run dev                  # http://localhost:3000
+npm ci
+cp .env.example .env         # add OPENROUTER_API_KEY (Upstash vars optional: unset = no rate limiting)
+npm run dev:server           # API on http://localhost:8080
+npm run dev                  # frontend on http://localhost:3000 (calls NEXT_PUBLIC_API_BASE)
 ```
 
 ```bash
-npm test                     # unit tests: dataset, blocklist, rate limit, die-cut maths
-npm run eval:safety          # needs `npm run dev` running and photos in safety-eval/images/
+npm test                     # unit tests: dataset, blocklist, OpenRouter client, die-cut maths
+npm run eval:safety          # needs `npm run dev:server` running and photos in safety-eval/images/
+npm run build:server         # bundles the API into server/dist/server.js (what the Docker image runs)
 ```
 
-Environment variables (see `.env.example`): `GEMINI_API_KEY`, `GEMINI_TEXT_MODEL`, `OPENROUTER_API_KEY`, `OPENROUTER_IMAGE_MODEL`, `NEXT_PUBLIC_SITE_URL`. On Vercel, add the same variables under Project → Settings → Environment Variables. **Set a credit limit on the OpenRouter key** (we use US$5) as a hard cost cap.
+Environment variables are documented in `.env.example`.
+
+### Deployment
+
+- **API → Cloud Run.** `Dockerfile` (build context = repo root) bundles `server/` + `lib/` + `data/` with esbuild and
+  runs only the bundle. `.github/workflows/deploy.yml` builds it on every push to `main`, pushes it to Docker Hub and
+  deploys the `ail-ay2627-s1-isaacsee-mememe` service, with env vars from the repo's `DOTENV` secret
+  (`gh secret set DOTENV < .env`). Set `CORS_ORIGINS` to the Vercel URL. `GET /api/health` → `{"status":"ok"}`.
+- **Frontend → Vercel.** Import the repo (root directory = repo root, Next.js preset, see `vercel.json`) and set
+  `NEXT_PUBLIC_API_BASE` to the Cloud Run URL and `NEXT_PUBLIC_SITE_URL` to the Vercel URL.
+- **Cost controls.** Every AI route is rate limited per IP by the shared AI Lodge engine (buckets `analyze`, `match`,
+  `generation`, `stylize`, `moderate`; `RATE_LIMIT_*_MAX` fallbacks over a 5-day window, tunable centrally). Hitting a
+  limit shows the AI Lodge CTA modal; a paused demo shows a "temporarily paused" notice. **Set a credit limit on the
+  OpenRouter key** as a hard cost cap.
 
 ## 7. AI Safety & Limitations
 
@@ -110,12 +130,14 @@ Environment variables (see `.env.example`): `GEMINI_API_KEY`, `GEMINI_TEXT_MODEL
 | **Prompt injection via text in the image** | Every system prompt says text in the image (or in analysis data) is data, never instructions. The gate reports `contains_text_instructions`, which is logged and tested (eval case 5). Model output is never trusted as a decision: the allow/block logic is code. |
 | **Privacy of uploaded faces** | Photos are resized and re-encoded on the device (strips EXIF/GPS), processed in memory, and never written to disk, a database or logs. Logs hold metadata only (route, latency, block reason, model). The sticker sheet lives in React state and disappears on refresh. |
 | **Bias / errors in age and celebrity detection** | Treated as a known limitation (below). Block messages are calm and specific, and offer a next step instead of an accusation. |
-| **API cost abuse** | Per-IP hourly limits (10 stickers, 12 image-model calls, 25 photo checks), a 4 MB body limit, and a hard credit cap on the OpenRouter key. |
+| **API cost abuse** | Per-IP limits on every AI route via the shared Upstash rate-limit engine (separate, tighter bucket for the image model), a 4 MB body limit, and a hard credit cap on the OpenRouter key. |
 | **Malformed model output** | zod validation on every response, one retry, then a graceful error. Stack traces never reach the client. |
 
 ### Safety eval results
 
-`npm run eval:safety` runs the 12 cases in `safety-eval/cases.json` against the running app and writes `safety-eval/results.md`. Fault cases (9, 10) use dev-only fault injection headers that are ignored in production.
+`npm run eval:safety` runs the 12 cases in `safety-eval/cases.json` against the running API and writes `safety-eval/results.md`. Fault cases (9, 10) use dev-only fault injection headers that are ignored in production. Case 12 needs Upstash credentials on the server.
+
+> The run below predates the move to OpenRouter and the shared rate limiter (it called the Gemini API directly, and case 12 tested the old hourly limit). Re-run the eval against the OpenRouter path before relying on these numbers.
 
 Latest run (local dev server, `gemini-3.5-flash-lite` + `google/gemini-3.1-flash-image`, 18 Oct 2026):
 
@@ -141,9 +163,9 @@ Test photos come from Wikimedia Commons (public domain or Creative Commons) and 
 ### Limitations
 
 - Age and celebrity detection come from a general vision model and **can be wrong** in both directions.
-- The in-memory rate limit **resets on redeploy** and is per server instance, so it's a speed bump, not a wall.
+- Rate limits are per IP, so users behind one shared IP (e.g. a venue Wi-Fi) share a quota; event mode in the central config raises limits for such days.
 - The "AI-generated" label is drawn into the PNG but **can be cropped out**.
 - Third-party image models may **refuse** some photos; MemeMe then falls back to a die-cut-style photo sticker.
 - Background removal assumes the image model returns a plain white background. If it doesn't, the app falls back to a rounded-square sticker.
 - Caption humour is subjective, and the moderator may occasionally reject a harmless edit.
-- On Gemini's **free tier** (15 requests/minute per model) the app manages roughly 3 stickers a minute across all users; beyond that it shows "The AI service is busy right now". A billed key removes this ceiling.
+- If OpenRouter or its upstream provider is rate limited, the app shows "The AI service is busy right now" after one retry.

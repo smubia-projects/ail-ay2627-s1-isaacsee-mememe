@@ -17,7 +17,8 @@ Return ONLY a JSON object with this exact shape:
   "safety": {
     "subject_type": "person" | "pet" | "animal" | "object" | "none",
     "subject_count": integer (number of people/animals that are clear subjects),
-    "likely_minor": boolean (true if ANY person in the photo looks under 18; when unsure, true),
+    "people_count": integer (number of humans visible anywhere in the photo; 0 for a photo of only pets, animals or objects),
+    "likely_minor": boolean (false if people_count is 0; otherwise true if ANY person in the photo looks under 18, and when unsure about a person, true),
     "public_figure_likely": boolean (true if a person looks like a recognisable celebrity, politician or public figure; do not name them),
     "nsfw_or_suggestive": boolean,
     "violence_or_gore": boolean,

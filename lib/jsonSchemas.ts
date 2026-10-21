@@ -17,6 +17,7 @@ export const ANALYZE_JSON = obj(
     safety: obj({
       subject_type: SUBJECT,
       subject_count: { type: "integer", minimum: 0 },
+      people_count: { type: "integer", minimum: 0 },
       likely_minor: bool,
       public_figure_likely: bool,
       nsfw_or_suggestive: bool,

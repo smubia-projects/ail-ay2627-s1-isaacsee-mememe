@@ -12,6 +12,8 @@ const bool = z.union([z.boolean(), z.enum(["true", "false"]).transform((v) => v 
 export const SafetyGateSchema = z.object({
   subject_type: SubjectType,
   subject_count: z.coerce.number().int().min(0).max(100),
+  // Optional so an older/odd response still parses; decide() treats a missing count as "may contain people".
+  people_count: z.coerce.number().int().min(0).max(100).optional(),
   likely_minor: bool,
   public_figure_likely: bool,
   nsfw_or_suggestive: bool,

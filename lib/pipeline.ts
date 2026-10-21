@@ -53,7 +53,10 @@ export function decide(g: SafetyGate): { allowed: true } | { allowed: false; cod
   if (g.violence_or_gore) return { allowed: false, code: "violence" };
   // Crowds first: "try fewer people" is the actionable message, and the photo is blocked either way.
   if (g.subject_count > 3) return { allowed: false, code: "too_many" };
-  if (g.likely_minor) return { allowed: false, code: "minor" };
+  // "When unsure, true" makes the model flag pet-only photos too, so only trust the flag when people are present.
+  // A person subject always counts as people present, whatever people_count says.
+  const hasPeople = g.subject_type === "person" || g.people_count === undefined || g.people_count > 0;
+  if (g.likely_minor && hasPeople) return { allowed: false, code: "minor" };
   if (g.public_figure_likely) return { allowed: false, code: "public_figure" };
   return { allowed: true };
 }

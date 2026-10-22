@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { OPENROUTER_CHAT_URL, openRouterHeaders } from "./openrouter";
 
 /** Vision + JSON model for the safety gate, analysis, ranking, captions and moderation. */
-export const TEXT_MODEL = process.env.OPENROUTER_TEXT_MODEL || "google/gemini-3.5-flash-lite";
+export const TEXT_MODEL = (process.env.MODEL_NAME || process.env.OPENROUTER_TEXT_MODEL) || "google/gemini-3.5-flash-lite";
 
 export class AiError extends Error {
   constructor(
@@ -93,7 +93,7 @@ export async function generateJson<T extends z.ZodType>(
     if (opts.fakeResponses) {
       text = opts.fakeResponses[attempt] ?? "";
     } else {
-      if (!process.env.OPENROUTER_API_KEY) throw new AiError("config", "OPENROUTER_API_KEY is not set");
+      if (!(process.env.API_KEY || process.env.OPENROUTER_API_KEY)) throw new AiError("config", "OPENROUTER_API_KEY is not set");
       const ac = new AbortController();
       const timer = setTimeout(() => ac.abort(), opts.timeoutMs ?? 25_000);
       try {

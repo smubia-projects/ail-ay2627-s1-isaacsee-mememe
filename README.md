@@ -66,8 +66,8 @@ All model calls go through **OpenRouter** (`server/` on Cloud Run; the `/api/*` 
 
 | Tool | Use | Licence / terms |
 |---|---|---|
-| OpenRouter, `google/gemini-3.5-flash-lite` (set via `OPENROUTER_TEXT_MODEL`) | Vision safety gate, analysis, ranking, captions, moderation | OpenRouter / Google terms |
-| OpenRouter, `google/gemini-3.1-flash-image` (set via `OPENROUTER_IMAGE_MODEL`) | Sticker stylisation | OpenRouter terms |
+| OpenRouter, `google/gemini-3.5-flash-lite` (set via `MODEL_NAME`) | Vision safety gate, analysis, ranking, captions, moderation | OpenRouter / Google terms |
+| OpenRouter, `google/gemini-3.1-flash-image` (set via `IMAGE_MODEL_NAME`) | Sticker stylisation | OpenRouter terms |
 | Next.js 16 (App Router), React 19, TypeScript | Frontend | MIT |
 | Express 5, esbuild | API server (Cloud Run), bundled into one file | MIT |
 | Upstash Redis (shared AI Lodge rate-limit engine) | Per-IP limits on every AI route | Upstash terms |
@@ -91,7 +91,7 @@ The repo holds two deployables: the **Next.js frontend** (`app/`, `components/`,
 git clone <this repo>
 cd mememe
 npm ci
-cp .env.example .env         # add OPENROUTER_API_KEY (Upstash vars optional: unset = no rate limiting)
+cp .env.example .env         # add API_KEY (Upstash vars optional: unset = no rate limiting)
 npm run dev:server           # API on http://localhost:8080
 npm run dev                  # frontend on http://localhost:3000 (calls NEXT_PUBLIC_API_BASE)
 ```

@@ -2,9 +2,9 @@ import "server-only";
 import { z } from "zod";
 
 /** Image-output model for the sticker stylizer (must also accept image input). */
-export const OPENROUTER_MODEL = (process.env.IMAGE_MODEL_NAME || process.env.OPENROUTER_IMAGE_MODEL) || "google/gemini-3.1-flash-image";
+export const OPENROUTER_MODEL = (process.env.IMAGE_MODEL_NAME || process.env.OPENROUTER_IMAGE_MODEL) || "gemini-3.1-flash-lite-image";
 
-export const OPENROUTER_CHAT_URL = `${((process.env.API_BASE_URL || process.env.OPENROUTER_BASE_URL)?.trim() || "https://openrouter.ai/api/v1").replace(/\/+$/, "")}/chat/completions`;
+export const OPENROUTER_CHAT_URL = `${((process.env.API_BASE_URL || process.env.OPENROUTER_BASE_URL)?.trim() || "https://api.apiyi.com/v1").replace(/\/+$/, "")}/chat/completions`;
 
 /** Shared headers for every OpenRouter call (text/vision JSON in lib/llm.ts and images here). */
 export function openRouterHeaders() {
@@ -49,6 +49,11 @@ export function extractImage(json: unknown): string | null {
       const p = ImageEntry.safeParse(part);
       if (p.success && DataUrl.safeParse(p.data.image_url.url).success) return p.data.image_url.url;
     }
+  }
+  // apiyi returns the image inside the text as Markdown: ![image](data:image/jpeg;base64,...)
+  if (typeof msg.content === "string") {
+    const found = /!\[[^\]]*\]\((data:image\/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+)\)/.exec(msg.content);
+    if (found) return found[1];
   }
   return null;
 }

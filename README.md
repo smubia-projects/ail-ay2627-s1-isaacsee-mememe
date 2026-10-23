@@ -57,7 +57,7 @@ photo ──► [1] Safety Gate ──► [2] Subject Analyzer ──► [3] Tem
 | 3 Template matcher | `POST /api/match` | Code filter (theme × subject) over `data/meme_templates.json`, then Gemini ranks the top 3; tag-overlap scorer as fallback | Grounds the output in a curated dataset instead of free-form generation, so formats are recognisable and copyright-free. |
 | 4 Caption writer | `POST /api/captions` | Gemini, JSON mode, theme-specific tone | Fills only the template's slots (≤60 chars). Prompted to joke about the situation, never the subject's body or identity. |
 | 5 Caption moderator | inside `/api/captions` and `POST /api/moderate` | Layer 1: local regex blocklist with l33t/obfuscation normalisation. Layer 2: a separate Gemini classifier with its own prompt | An independent second check. Unsafe captions are regenerated once, then replaced with the template's hand-written `safe_fallback`. User edits go through the same two layers. |
-| 6 Sticker stylizer | `POST /api/stylize` | OpenRouter image model (`google/gemini-3.1-flash-image` by default) | Needs image **input** to keep the subject's likeness. 40s timeout; any error, refusal or missing image falls back to the photo. |
+| 6 Sticker stylizer | `POST /api/stylize` | apiyi image model (`gemini-3.1-flash-lite-image` by default) | Needs image **input** to keep the subject's likeness. 40s timeout; any error, refusal or missing image falls back to the photo. |
 | 7–8 Die-cut + compositor | Browser (`lib/canvas/*`) | Flood-fill mask, chamfer distance-transform outline, Canvas text | Image models render text badly, so all text is drawn in code with real fonts. |
 
 All model calls go through **OpenRouter** (`server/` on Cloud Run; the `/api/*` routes above). Every JSON call (Gemini via OpenRouter, `lib/llm.ts`) uses constrained decoding (`response_format: json_schema` from `lib/jsonSchemas.ts`) and every response is still validated with **zod**; a parse failure retries once, then returns a clear error. Rate-limit (429) responses get one short back-off retry. The image model runs in parallel with steps 3–5 to keep the happy path under 30 seconds. The progress list on screen ticks when each real API call resolves; there are no fake timers.
@@ -66,8 +66,8 @@ All model calls go through **OpenRouter** (`server/` on Cloud Run; the `/api/*` 
 
 | Tool | Use | Licence / terms |
 |---|---|---|
-| OpenRouter, `google/gemini-3.5-flash-lite` (set via `MODEL_NAME`) | Vision safety gate, analysis, ranking, captions, moderation | OpenRouter / Google terms |
-| OpenRouter, `google/gemini-3.1-flash-image` (set via `IMAGE_MODEL_NAME`) | Sticker stylisation | OpenRouter terms |
+| apiyi, `gemini-3.5-flash-lite` (set via `MODEL_NAME`) | Vision safety gate, analysis, ranking, captions, moderation | apiyi / Google terms |
+| apiyi, `gemini-3.1-flash-lite-image` (set via `IMAGE_MODEL_NAME`) | Sticker stylisation | apiyi terms |
 | Next.js 16 (App Router), React 19, TypeScript | Frontend | MIT |
 | Express 5, esbuild | API server (Cloud Run), bundled into one file | MIT |
 | Upstash Redis (shared AI Lodge rate-limit engine) | Per-IP limits on every AI route | Upstash terms |

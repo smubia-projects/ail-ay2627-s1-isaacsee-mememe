@@ -28,7 +28,7 @@ describe("generateJson via OpenRouter", () => {
     });
     expect(out).toEqual({ ok: true });
     const [url, init] = fetchMock.mock.calls[0];
-    expect(url).toBe("https://openrouter.ai/api/v1/chat/completions");
+    expect(url).toBe("https://api.apiyi.com/v1/chat/completions");
     expect(init.headers.Authorization).toBe("Bearer test-key");
     const body = JSON.parse(init.body);
     expect(body.messages[0]).toEqual({ role: "system", content: "sys" });

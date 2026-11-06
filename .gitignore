@@ -50,5 +50,6 @@ next-env.d.ts
 # local test photos
 /public/_test/
 
-.vercel
-.env*
+
+# bundled API (npm run build:server)
+/server/dist/

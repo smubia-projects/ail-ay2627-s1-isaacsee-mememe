@@ -1,7 +1,20 @@
 import "server-only";
 import { z } from "zod";
 
-export const OPENROUTER_MODEL = process.env.OPENROUTER_IMAGE_MODEL || "google/gemini-3.1-flash-image";
+/** Image-output model for the sticker stylizer (must also accept image input). */
+export const OPENROUTER_MODEL = (process.env.IMAGE_MODEL_NAME || process.env.OPENROUTER_IMAGE_MODEL) || "gemini-3.1-flash-lite-image";
+
+export const OPENROUTER_CHAT_URL = `${((process.env.API_BASE_URL || process.env.OPENROUTER_BASE_URL)?.trim() || "https://api.apiyi.com/v1").replace(/\/+$/, "")}/chat/completions`;
+
+/** Shared headers for every OpenRouter call (text/vision JSON in lib/llm.ts and images here). */
+export function openRouterHeaders() {
+  return {
+    Authorization: `Bearer ${(process.env.API_KEY || process.env.OPENROUTER_API_KEY)}`,
+    "Content-Type": "application/json",
+    "HTTP-Referer": process.env.SITE_URL || "http://localhost:3000",
+    "X-Title": "MemeMe",
+  };
+}
 
 const DataUrl = z.string().regex(/^data:image\/(png|jpeg|jpg|webp);base64,/);
 const ImageEntry = z.object({ image_url: z.object({ url: z.string() }) });
@@ -37,23 +50,23 @@ export function extractImage(json: unknown): string | null {
       if (p.success && DataUrl.safeParse(p.data.image_url.url).success) return p.data.image_url.url;
     }
   }
+  // apiyi returns the image inside the text as Markdown: ![image](data:image/jpeg;base64,...)
+  if (typeof msg.content === "string") {
+    const found = /!\[[^\]]*\]\((data:image\/(?:png|jpeg|jpg|webp);base64,[A-Za-z0-9+/=]+)\)/.exec(msg.content);
+    if (found) return found[1];
+  }
   return null;
 }
 
 export async function stylizeImage(prompt: string, imageDataUrl: string, timeoutMs = 40_000): Promise<StylizeResult> {
-  if (!process.env.OPENROUTER_API_KEY) return { ok: false, reason: "no_key" };
+  if (!(process.env.API_KEY || process.env.OPENROUTER_API_KEY)) return { ok: false, reason: "no_key" };
   const ac = new AbortController();
   const timer = setTimeout(() => ac.abort(), timeoutMs);
   try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const res = await fetch(OPENROUTER_CHAT_URL, {
       method: "POST",
       signal: ac.signal,
-      headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000",
-        "X-Title": "MemeMe",
-      },
+      headers: openRouterHeaders(),
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
         modalities: ["image", "text"],

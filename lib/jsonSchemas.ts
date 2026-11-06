@@ -1,4 +1,4 @@
-// JSON Schemas sent to Gemini as `responseJsonSchema`, so decoding is constrained to valid JSON
+// JSON Schemas sent to OpenRouter as `response_format.json_schema`, so decoding is constrained to valid JSON
 // of the right shape. zod (lib/schemas.ts) still validates every response independently.
 
 const str = { type: "string" };

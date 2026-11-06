@@ -95,7 +95,9 @@ function CaptionEditor({ option: current, onCommit }: { option: CaptionOption; o
         setDraft(current.slots);
       }
     } catch (e) {
-      setError(e instanceof ApiError ? `${e.message} Your edit wasn't saved.` : "We couldn't check that caption. Try again.");
+      // 429/503 already show the rate-limit CTA or paused notice; just keep the old caption.
+      if (e instanceof ApiError && e.handled) setError("Your edit wasn't saved.");
+      else setError(e instanceof ApiError ? `${e.message} Your edit wasn't saved.` : "We couldn't check that caption. Try again.");
       setDraft(current.slots);
     } finally {
       setChecking(false);

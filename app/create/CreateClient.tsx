@@ -95,7 +95,8 @@ export function CreateClient() {
               return { canvas, notice: null };
             }
           } catch (e) {
-            if (e instanceof ApiError && e.status === 429) throw e;
+            // Rate limit / paused demo: surface the CTA instead of silently falling back to the photo.
+            if (e instanceof ApiError && e.handled) throw e;
           }
         }
         const img = await loadImage(photo.dataUrl);
@@ -124,6 +125,11 @@ export function CreateClient() {
       setPhase("result");
     } catch (e) {
       if (!live()) return;
+      // 429/503: the rate-limit CTA or paused notice is already showing, so skip the error card.
+      if (e instanceof ApiError && e.handled) {
+        setPhase("setup");
+        return;
+      }
       setMessage(e instanceof ApiError ? e.message : "Something went wrong while making your sticker. Try again.");
       setPhase("error");
     }

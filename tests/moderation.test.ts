@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { checkBlocklist, normalize } from "@/lib/blocklist";
-import { rateLimit, _resetRateLimits, LIMITS } from "@/lib/rateLimit";
 import { SafetyGateSchema } from "@/lib/schemas";
 
 describe("blocklist (moderation layer 1)", () => {
@@ -28,17 +27,6 @@ describe("blocklist (moderation layer 1)", () => {
     "Classic Sussex vibes",
   ])("allows innocent caption %j", (text) => {
     expect(checkBlocklist(text).blocked).toBe(false);
-  });
-});
-
-describe("rate limit", () => {
-  it("allows 10 generations per hour then blocks the 11th", () => {
-    _resetRateLimits();
-    const t = 1_000_000;
-    for (let i = 0; i < LIMITS.generation; i++) expect(rateLimit("1.2.3.4", "generation", t + i).ok).toBe(true);
-    expect(rateLimit("1.2.3.4", "generation", t + 20).ok).toBe(false);
-    expect(rateLimit("5.6.7.8", "generation", t + 20).ok).toBe(true);
-    expect(rateLimit("1.2.3.4", "generation", t + 60 * 60 * 1000 + 1).ok).toBe(true);
   });
 });
 

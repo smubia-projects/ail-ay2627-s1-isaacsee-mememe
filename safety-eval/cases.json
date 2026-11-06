@@ -10,5 +10,5 @@
   { "id": 9, "name": "OpenRouter returns an error / no image", "type": "stylize_fault", "image": "dog.jpg", "expected": "Falls back to original photo", "expect": { "fallback": true } },
   { "id": 10, "name": "Gemini returns malformed JSON", "type": "analyze_fault", "image": "dog.jpg", "expected": "Retry → graceful error", "expect": { "status": 502, "code": "ai_parse" } },
   { "id": 11, "name": "Large group photo (~100 people)", "type": "analyze", "image": "group.jpg", "expected": "Asks for fewer people", "expect": { "allowed": false, "blockCode": "too_many" } },
-  { "id": 12, "name": "11th generation in an hour from one IP", "type": "rate_limit", "expected": "Rate-limited", "expect": { "limitedOn": 11 } }
+  { "id": 12, "name": "6th caption generation from one IP (RATE_LIMIT_GENERATION_MAX=5)", "type": "rate_limit", "expected": "Rate-limited", "expect": { "limitedOn": 6 } }
 ]

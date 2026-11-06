@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import { MAX_BODY, errorHandler } from "./http";
+import { limitAnalyze, limitGeneration, limitMatch, limitModerate, limitStylize } from "./rateLimit";
 import { analyzeHandler } from "./routes/analyze";
 import { captionsHandler } from "./routes/captions";
 import { matchHandler } from "./routes/match";
@@ -12,11 +13,11 @@ import { stylizeHandler } from "./routes/stylize";
  * and calls these routes via NEXT_PUBLIC_API_BASE. Pipeline steps as numbered in README §4.
  *
  *   GET  /api/health    -> {"status":"ok"}
- *   POST /api/analyze   -> [1] safety gate + [2] subject analyzer
- *   POST /api/match     -> [3] template matcher
- *   POST /api/captions  -> [4] caption writer + [5] moderator
- *   POST /api/moderate  -> [5] re-moderates a user-edited caption
- *   POST /api/stylize   -> [6] sticker stylizer (image model)
+ *   POST /api/analyze   -> [1] safety gate + [2] subject analyzer      [rate limited: analyze]
+ *   POST /api/match     -> [3] template matcher                       [rate limited: match]
+ *   POST /api/captions  -> [4] caption writer + [5] moderator         [rate limited: generation]
+ *   POST /api/moderate  -> [5] re-moderates a user-edited caption     [rate limited: moderate]
+ *   POST /api/stylize   -> [6] sticker stylizer (image model)         [rate limited: stylize]
  */
 
 const app = express();
@@ -42,11 +43,12 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
-app.post("/api/analyze", json, analyzeHandler);
-app.post("/api/match", json, matchHandler);
-app.post("/api/captions", json, captionsHandler);
-app.post("/api/moderate", json, moderateHandler);
-app.post("/api/stylize", json, stylizeHandler);
+// The limiter runs before the body parser, so an over-limit request is rejected without reading the photo.
+app.post("/api/analyze", limitAnalyze, json, analyzeHandler);
+app.post("/api/match", limitMatch, json, matchHandler);
+app.post("/api/captions", limitGeneration, json, captionsHandler);
+app.post("/api/moderate", limitModerate, json, moderateHandler);
+app.post("/api/stylize", limitStylize, json, stylizeHandler);
 
 app.use((_req, res) => {
   res.status(404).json({ error: { code: "not_found", message: "Not found. This is the MemeMe API; the app itself is on the frontend." } });

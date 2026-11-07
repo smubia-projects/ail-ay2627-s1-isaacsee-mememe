@@ -13,7 +13,7 @@ export const PROJECT_CTA = {
   accentColor: '#FF4F9A',
   headline: "You've made a whole sticker pack!",
   description:
-    'You used all {count} free tries on this demo. Want unlimited stickers? Self-host MemeMe from GitHub, or join us and build projects like this.',
+    'Want to build AI that makes your group chat funnier, one photo at a time? AI Lodge is where SMU students make their wildest AI ideas real and put them online for anyone to try.',
   programme: 'AI Lodge',
   programmeLink: 'https://www.smubia.com/ailodge',
   githubLink: 'https://github.com/smubia-projects/ail-ay2627-s1-isaacsee-mememe',

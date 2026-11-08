@@ -3,7 +3,7 @@ import type { z } from "zod";
 import { OPENROUTER_CHAT_URL, openRouterHeaders } from "./openrouter";
 
 /** Vision + JSON model for the safety gate, analysis, ranking, captions and moderation. */
-export const TEXT_MODEL = (process.env.MODEL_NAME || process.env.OPENROUTER_TEXT_MODEL) || "gemini-3.5-flash-lite";
+export const TEXT_MODEL = (process.env.MODEL_NAME || process.env.OPENROUTER_TEXT_MODEL) || "deepseek-v4-1-flash-260910";
 
 export class AiError extends Error {
   constructor(
@@ -50,6 +50,8 @@ async function chatJson(opts: { system: string; parts: Part[]; jsonSchema?: unkn
     body: JSON.stringify({
       model: TEXT_MODEL,
       temperature: opts.temperature ?? 0.4,
+      // DeepSeek thinks first unless told not to; every call here runs under a timeout.
+      ...(/deepseek/i.test(TEXT_MODEL) ? { reasoning_effort: "none" } : {}),
       messages: [
         { role: "system", content: opts.system },
         { role: "user", content: toContent(opts.parts) },

@@ -66,7 +66,7 @@ All model calls go through **OpenRouter** (`server/` on Cloud Run; the `/api/*` 
 
 | Tool | Use | Licence / terms |
 |---|---|---|
-| apiyi, `gemini-3.5-flash-lite` (set via `MODEL_NAME`) | Vision safety gate, analysis, ranking, captions, moderation | apiyi / Google terms |
+| apiyi, `deepseek-v4-1-flash-260910` (set via `MODEL_NAME`) | Vision safety gate, analysis, ranking, captions, moderation | apiyi / Google terms |
 | apiyi, `gemini-3.1-flash-lite-image` (set via `IMAGE_MODEL_NAME`) | Sticker stylisation | apiyi terms |
 | Next.js 16 (App Router), React 19, TypeScript | Frontend | MIT |
 | Express 5, esbuild | API server (Cloud Run), bundled into one file | MIT |
